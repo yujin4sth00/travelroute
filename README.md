@@ -74,4 +74,6 @@ npm run dev
 
 ## 개발 로드맵
 
-Phase 0(현재)부터 Phase 8까지의 단계별 계획은 [docs/design.md](docs/design.md#6-단계별-개발-로드맵) 참고.
+Phase 0~7(장소/여행/동선 최적화/도보 경로 캐싱/지도/자동 분배/Kakao 로그인) 전부 완료.
+Phase 8(실서버 배포)은 비용 문제로 보류 — `docker compose up`으로 로컬에서 전체 기능을 사용할 수 있다.
+단계별 상세 내용은 [docs/design.md](docs/design.md#6-단계별-개발-로드맵) 참고.

@@ -185,18 +185,22 @@ POST   /api/auth/kakao                 카카오 로그인
 ## 6. 단계별 개발 로드맵
 
 ```
-Phase 0: 프로젝트 뼈대 + Docker 환경        ✅ (이 커밋)
-Phase 1: 장소(Place) 도메인
-Phase 2: 여행(Trip)/날짜(TripDay)/배치(TripDayPlace) CRUD
-Phase 3: 동선 최적화 로직 (Stage A, Haversine)
-Phase 4: Kakao 도보 경로 API 연동 + 캐싱 (Stage B)
-Phase 5: 프론트엔드 지도 시각화
-Phase 6: 다박 여행 자동 분배
-Phase 7: Kakao 로그인 연동
-Phase 8: 배포 및 확장
+Phase 0: 프로젝트 뼈대 + Docker 환경                    ✅ 완료
+Phase 1: 장소(Place) 도메인                             ✅ 완료
+Phase 2: 여행(Trip)/날짜(TripDay)/배치(TripDayPlace) CRUD ✅ 완료
+Phase 3: 동선 최적화 로직 (Stage A, Haversine)           ✅ 완료
+Phase 4: Kakao 도보 경로 API 연동 + 캐싱 (Stage B)        ✅ 완료
+Phase 5: 프론트엔드 지도 시각화                          ✅ 완료
+Phase 6: 다박 여행 자동 분배                             ✅ 완료
+Phase 7: Kakao 로그인 연동                              ✅ 완료
+Phase 8: 배포 및 확장                                   보류 (실제 호스팅 비용 발생 — 필요 시 진행)
 ```
 
 각 Phase의 상세 지시문은 프로젝트 히스토리(대화 로그)에 남겨진 원본 설계 프롬프트를 참고한다.
+
+Phase 8(배포)은 의도적으로 보류했다. 로컬 `docker compose up`으로 전체 스택(MySQL + 백엔드)이
+완전히 동작하는 상태이며, 프론트는 `npm run dev`로 별도 실행한다. 실제 클라우드/서버 배포는
+비용이 발생하므로 필요해질 때 별도로 진행한다.
 
 ---
 
