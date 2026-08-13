@@ -1,6 +1,7 @@
 package com.travelroute.backend.global.exception;
 
 import com.travelroute.backend.place.PlaceNotFoundException;
+import com.travelroute.backend.route.MissingRoutePlacesException;
 import com.travelroute.backend.trip.InvalidReorderRequestException;
 import com.travelroute.backend.trip.InvalidTripPeriodException;
 import com.travelroute.backend.trip.TripDayNotFoundException;
@@ -34,7 +35,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             InvalidTripPeriodException.class,
-            InvalidReorderRequestException.class
+            InvalidReorderRequestException.class,
+            MissingRoutePlacesException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequestException(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

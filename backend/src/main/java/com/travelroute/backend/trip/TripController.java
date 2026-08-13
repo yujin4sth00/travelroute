@@ -1,5 +1,6 @@
 package com.travelroute.backend.trip;
 
+import com.travelroute.backend.route.RouteOptimizationService;
 import com.travelroute.backend.trip.dto.ReorderRequest;
 import com.travelroute.backend.trip.dto.TripCreateRequest;
 import com.travelroute.backend.trip.dto.TripDayPlaceCreateRequest;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TripController {
 
     private final TripService tripService;
+    private final RouteOptimizationService routeOptimizationService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -64,5 +66,10 @@ public class TripController {
     public List<TripDayPlaceResponse> reorder(@PathVariable Long tripId, @PathVariable Long dayId,
                                                @Valid @RequestBody ReorderRequest request) {
         return tripService.reorderPlaces(tripId, dayId, request);
+    }
+
+    @PostMapping("/{tripId}/days/{dayId}/optimize")
+    public List<TripDayPlaceResponse> optimize(@PathVariable Long tripId, @PathVariable Long dayId) {
+        return routeOptimizationService.optimizeDay(tripId, dayId);
     }
 }
