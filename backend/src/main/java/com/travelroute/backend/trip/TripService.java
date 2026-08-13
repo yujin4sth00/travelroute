@@ -60,6 +60,7 @@ public class TripService {
         return TripResponse.from(trip);
     }
 
+    @Transactional(readOnly = true)
     public TripDetailResponse getTripDetail(Long tripId) {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new TripNotFoundException(tripId));
