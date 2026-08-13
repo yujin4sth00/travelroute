@@ -1,6 +1,8 @@
 package com.travelroute.backend.trip;
 
+import com.travelroute.backend.route.DayRouteService;
 import com.travelroute.backend.route.RouteOptimizationService;
+import com.travelroute.backend.route.dto.DayRouteResponse;
 import com.travelroute.backend.trip.dto.ReorderRequest;
 import com.travelroute.backend.trip.dto.TripCreateRequest;
 import com.travelroute.backend.trip.dto.TripDayPlaceCreateRequest;
@@ -30,6 +32,7 @@ public class TripController {
 
     private final TripService tripService;
     private final RouteOptimizationService routeOptimizationService;
+    private final DayRouteService dayRouteService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -71,5 +74,10 @@ public class TripController {
     @PostMapping("/{tripId}/days/{dayId}/optimize")
     public List<TripDayPlaceResponse> optimize(@PathVariable Long tripId, @PathVariable Long dayId) {
         return routeOptimizationService.optimizeDay(tripId, dayId);
+    }
+
+    @GetMapping("/{tripId}/days/{dayId}/route")
+    public DayRouteResponse getRoute(@PathVariable Long tripId, @PathVariable Long dayId) {
+        return dayRouteService.getDayRoute(tripId, dayId);
     }
 }
