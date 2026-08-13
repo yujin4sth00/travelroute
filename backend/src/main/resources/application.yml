@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: backend
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:travelroute}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME:travelroute}
+    password: ${DB_PASSWORD:travelroute}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY:}
+  local-api-base-url: https://dapi.kakao.com/v2/local
+  walk-api-base-url: https://dapi.kakao.com/v2/routing/walk
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+logging:
+  level:
+    com.travelroute.backend: ${LOG_LEVEL:INFO}

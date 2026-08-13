@@ -1,0 +1,13 @@
+# Root-level environment secrets (used by docker-compose)
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Misc download artifacts
+*.zip
