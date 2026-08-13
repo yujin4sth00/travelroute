@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 
 import com.travelroute.backend.place.Place;
 import com.travelroute.backend.trip.Trip;
+import com.travelroute.backend.trip.TripAccessGuard;
 import com.travelroute.backend.trip.TripDay;
 import com.travelroute.backend.trip.TripDayNotFoundException;
 import com.travelroute.backend.trip.TripDayPlace;
@@ -36,11 +37,21 @@ class RouteOptimizationServiceTest {
     @Mock
     private RouteOptimizer routeOptimizer;
 
+    @Mock
+    private TripAccessGuard tripAccessGuard;
+
     @InjectMocks
     private RouteOptimizationService routeOptimizationService;
 
+    private Trip ownedTrip() {
+        Trip trip = Trip.builder().userId(1L).title("여행").build();
+        ReflectionTestUtils.setField(trip, "id", 1L);
+        return trip;
+    }
+
     @Test
     void optimizeDay_throwsTripDayNotFoundException_whenDayNotOwnedByTrip() {
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(ownedTrip());
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> routeOptimizationService.optimizeDay(1L, 10L))
@@ -49,10 +60,11 @@ class RouteOptimizationServiceTest {
 
     @Test
     void optimizeDay_throwsMissingRoutePlacesException_whenStartOrEndNotAssigned() {
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(Optional.of(day));
 
         assertThatThrownBy(() -> routeOptimizationService.optimizeDay(1L, 10L))
@@ -64,7 +76,7 @@ class RouteOptimizationServiceTest {
         Place start = Place.builder().name("시작").lat(0.0).lng(0.0).build();
         Place end = Place.builder().name("도착").lat(10.0).lng(10.0).build();
 
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
         day.assignPlaces(start, end);
@@ -80,6 +92,7 @@ class RouteOptimizationServiceTest {
         TripDayPlace tdp3 = TripDayPlace.builder().tripDay(day).place(p3).visitOrder(3).locked(false).build();
         ReflectionTestUtils.setField(tdp3, "id", 103L);
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(Optional.of(day));
         given(tripDayPlaceRepository.findByTripDayIdOrderByVisitOrderAsc(10L))
                 .willReturn(List.of(tdp1, tdp2, tdp3));
@@ -111,7 +124,7 @@ class RouteOptimizationServiceTest {
         Place start = Place.builder().name("시작").lat(0.0).lng(0.0).build();
         Place end = Place.builder().name("도착").lat(10.0).lng(10.0).build();
 
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
         day.assignPlaces(start, end);
@@ -120,6 +133,7 @@ class RouteOptimizationServiceTest {
         TripDayPlace tdp1 = TripDayPlace.builder().tripDay(day).place(p1).visitOrder(1).locked(true).build();
         ReflectionTestUtils.setField(tdp1, "id", 101L);
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(Optional.of(day));
         given(tripDayPlaceRepository.findByTripDayIdOrderByVisitOrderAsc(10L)).willReturn(List.of(tdp1));
 

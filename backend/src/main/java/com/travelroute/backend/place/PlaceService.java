@@ -1,5 +1,6 @@
 package com.travelroute.backend.place;
 
+import com.travelroute.backend.auth.CurrentUserProvider;
 import com.travelroute.backend.place.dto.PlaceCreateRequest;
 import com.travelroute.backend.place.dto.PlaceResponse;
 import com.travelroute.backend.place.dto.PlaceSearchResult;
@@ -15,6 +16,7 @@ public class PlaceService {
 
     private final PlaceRepository placeRepository;
     private final KakaoLocalClient kakaoLocalClient;
+    private final CurrentUserProvider currentUserProvider;
 
     public List<PlaceSearchResult> search(String query) {
         return kakaoLocalClient.searchByKeyword(query);
@@ -23,6 +25,7 @@ public class PlaceService {
     @Transactional
     public PlaceResponse save(PlaceCreateRequest request) {
         Place place = Place.builder()
+                .userId(currentUserProvider.getUserId())
                 .name(request.name())
                 .address(request.address())
                 .lat(request.lat())
@@ -36,16 +39,15 @@ public class PlaceService {
     }
 
     public List<PlaceResponse> findAll() {
-        return placeRepository.findAll().stream()
+        return placeRepository.findByUserId(currentUserProvider.getUserId()).stream()
                 .map(PlaceResponse::from)
                 .toList();
     }
 
     @Transactional
     public void delete(Long id) {
-        if (!placeRepository.existsById(id)) {
-            throw new PlaceNotFoundException(id);
-        }
-        placeRepository.deleteById(id);
+        Place place = placeRepository.findByIdAndUserId(id, currentUserProvider.getUserId())
+                .orElseThrow(() -> new PlaceNotFoundException(id));
+        placeRepository.delete(place);
     }
 }

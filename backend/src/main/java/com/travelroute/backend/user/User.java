@@ -1,4 +1,4 @@
-package com.travelroute.backend.trip;
+package com.travelroute.backend.user;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,7 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,40 +14,41 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "trips")
+@Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Trip {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "kakao_id", nullable = false, unique = true, length = 50)
+    private String kakaoId;
 
-    @Column(nullable = false, length = 100)
-    private String title;
+    @Column(length = 50)
+    private String nickname;
 
-    @Column(name = "start_date")
-    private LocalDate startDate;
-
-    @Column(name = "end_date")
-    private LocalDate endDate;
+    @Column(name = "profile_image", length = 255)
+    private String profileImage;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Builder
-    public Trip(Long userId, String title, LocalDate startDate, LocalDate endDate) {
-        this.userId = userId;
-        this.title = title;
-        this.startDate = startDate;
-        this.endDate = endDate;
+    public User(String kakaoId, String nickname, String profileImage) {
+        this.kakaoId = kakaoId;
+        this.nickname = nickname;
+        this.profileImage = profileImage;
     }
 
     @PrePersist
     void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void updateProfile(String nickname, String profileImage) {
+        this.nickname = nickname;
+        this.profileImage = profileImage;
     }
 }

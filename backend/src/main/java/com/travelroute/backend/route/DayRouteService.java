@@ -3,6 +3,7 @@ package com.travelroute.backend.route;
 import com.travelroute.backend.place.Place;
 import com.travelroute.backend.route.dto.DayRouteResponse;
 import com.travelroute.backend.route.dto.RouteSegmentResponse;
+import com.travelroute.backend.trip.TripAccessGuard;
 import com.travelroute.backend.trip.TripDay;
 import com.travelroute.backend.trip.TripDayNotFoundException;
 import com.travelroute.backend.trip.TripDayPlaceRepository;
@@ -20,9 +21,11 @@ public class DayRouteService {
     private final TripDayRepository tripDayRepository;
     private final TripDayPlaceRepository tripDayPlaceRepository;
     private final RouteCacheService routeCacheService;
+    private final TripAccessGuard tripAccessGuard;
 
     @Transactional
     public DayRouteResponse getDayRoute(Long tripId, Long dayId) {
+        tripAccessGuard.requireOwnedTrip(tripId);
         TripDay day = tripDayRepository.findByIdAndTripId(dayId, tripId)
                 .orElseThrow(() -> new TripDayNotFoundException(tripId, dayId));
 

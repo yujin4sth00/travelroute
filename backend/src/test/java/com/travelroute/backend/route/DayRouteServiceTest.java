@@ -8,6 +8,7 @@ import com.travelroute.backend.place.Place;
 import com.travelroute.backend.route.dto.DayRouteResponse;
 import com.travelroute.backend.route.dto.RouteSegmentResponse;
 import com.travelroute.backend.trip.Trip;
+import com.travelroute.backend.trip.TripAccessGuard;
 import com.travelroute.backend.trip.TripDay;
 import com.travelroute.backend.trip.TripDayNotFoundException;
 import com.travelroute.backend.trip.TripDayPlace;
@@ -34,6 +35,9 @@ class DayRouteServiceTest {
     @Mock
     private RouteCacheService routeCacheService;
 
+    @Mock
+    private TripAccessGuard tripAccessGuard;
+
     @InjectMocks
     private DayRouteService dayRouteService;
 
@@ -43,8 +47,15 @@ class DayRouteServiceTest {
         return place;
     }
 
+    private Trip ownedTrip() {
+        Trip trip = Trip.builder().userId(1L).title("여행").build();
+        ReflectionTestUtils.setField(trip, "id", 1L);
+        return trip;
+    }
+
     @Test
     void getDayRoute_throwsTripDayNotFoundException_whenDayNotOwnedByTrip() {
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(ownedTrip());
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> dayRouteService.getDayRoute(1L, 10L))
@@ -53,10 +64,11 @@ class DayRouteServiceTest {
 
     @Test
     void getDayRoute_throwsMissingRoutePlacesException_whenStartOrEndNotAssigned() {
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(Optional.of(day));
 
         assertThatThrownBy(() -> dayRouteService.getDayRoute(1L, 10L))
@@ -70,7 +82,7 @@ class DayRouteServiceTest {
         Place p1 = place(2L, 1.0, 1.0);
         Place p2 = place(3L, 2.0, 2.0);
 
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
         day.assignPlaces(start, end);
@@ -78,6 +90,7 @@ class DayRouteServiceTest {
         TripDayPlace tdp1 = TripDayPlace.builder().tripDay(day).place(p1).visitOrder(1).locked(false).build();
         TripDayPlace tdp2 = TripDayPlace.builder().tripDay(day).place(p2).visitOrder(2).locked(false).build();
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(Optional.of(day));
         given(tripDayPlaceRepository.findByTripDayIdOrderByVisitOrderAsc(10L))
                 .willReturn(List.of(tdp1, tdp2));

@@ -1,13 +1,11 @@
 package com.travelroute.backend.route;
 
 import com.travelroute.backend.place.Place;
-import com.travelroute.backend.trip.Trip;
+import com.travelroute.backend.trip.TripAccessGuard;
 import com.travelroute.backend.trip.TripDay;
 import com.travelroute.backend.trip.TripDayPlace;
 import com.travelroute.backend.trip.TripDayPlaceRepository;
 import com.travelroute.backend.trip.TripDayRepository;
-import com.travelroute.backend.trip.TripNotFoundException;
-import com.travelroute.backend.trip.TripRepository;
 import com.travelroute.backend.trip.TripService;
 import com.travelroute.backend.trip.dto.TripDetailResponse;
 import java.util.ArrayList;
@@ -27,16 +25,16 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AutoAssignService {
 
-    private final TripRepository tripRepository;
     private final TripDayRepository tripDayRepository;
     private final TripDayPlaceRepository tripDayPlaceRepository;
     private final GeoClusterer geoClusterer;
     private final RouteOptimizer routeOptimizer;
     private final TripService tripService;
+    private final TripAccessGuard tripAccessGuard;
 
     @Transactional
     public TripDetailResponse autoAssign(Long tripId) {
-        tripRepository.findById(tripId).orElseThrow(() -> new TripNotFoundException(tripId));
+        tripAccessGuard.requireOwnedTrip(tripId);
 
         List<TripDay> days = tripDayRepository.findByTripIdOrderByDayNumberAsc(tripId);
         List<TripDayPlace> allEntries = tripDayPlaceRepository.findAllByTripIdOrderByDayAndOrder(tripId);

@@ -35,6 +35,28 @@
   font-weight: 600;
 }
 
+.kakao-login-button {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fee500;
+  color: #191600;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.auth-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.auth-status button {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
 main {
   flex: 1;
   width: 100%;

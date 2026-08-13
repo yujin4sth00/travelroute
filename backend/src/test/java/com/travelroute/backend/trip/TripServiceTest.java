@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.travelroute.backend.auth.CurrentUserProvider;
 import com.travelroute.backend.place.Place;
 import com.travelroute.backend.place.PlaceRepository;
 import com.travelroute.backend.trip.dto.ReorderRequest;
@@ -39,11 +40,25 @@ class TripServiceTest {
     @Mock
     private PlaceRepository placeRepository;
 
+    @Mock
+    private TripAccessGuard tripAccessGuard;
+
+    @Mock
+    private CurrentUserProvider currentUserProvider;
+
     @InjectMocks
     private TripService tripService;
 
+    private Trip ownedTrip() {
+        Trip trip = Trip.builder().userId(1L).title("여행").build();
+        ReflectionTestUtils.setField(trip, "id", 1L);
+        return trip;
+    }
+
     @Test
     void createTrip_generatesOneTripDayPerCalendarDay() {
+        given(currentUserProvider.getUserId()).willReturn(1L);
+
         TripCreateRequest request = new TripCreateRequest(
                 "제주 여행", LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 3));
 
@@ -82,15 +97,17 @@ class TripServiceTest {
 
     @Test
     void addPlaceToDay_assignsNextVisitOrderAfterExistingMax() {
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
 
-        Place place = Place.builder().name("카페").lat(37.0).lng(127.0).build();
+        Place place = Place.builder().userId(1L).name("카페").lat(37.0).lng(127.0).build();
         ReflectionTestUtils.setField(place, "id", 5L);
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(java.util.Optional.of(day));
-        given(placeRepository.findById(5L)).willReturn(java.util.Optional.of(place));
+        given(currentUserProvider.getUserId()).willReturn(1L);
+        given(placeRepository.findByIdAndUserId(5L, 1L)).willReturn(java.util.Optional.of(place));
         given(tripDayPlaceRepository.findMaxVisitOrder(10L)).willReturn(2);
         given(tripDayPlaceRepository.save(any(TripDayPlace.class))).willAnswer(invocation -> invocation.getArgument(0));
 
@@ -104,18 +121,19 @@ class TripServiceTest {
 
     @Test
     void reorderPlaces_locksAndReassignsVisitOrderInGivenSequence() {
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
 
-        Place placeA = Place.builder().name("A").lat(1.0).lng(1.0).build();
-        Place placeB = Place.builder().name("B").lat(2.0).lng(2.0).build();
+        Place placeA = Place.builder().userId(1L).name("A").lat(1.0).lng(1.0).build();
+        Place placeB = Place.builder().userId(1L).name("B").lat(2.0).lng(2.0).build();
 
         TripDayPlace tdp1 = TripDayPlace.builder().tripDay(day).place(placeA).visitOrder(1).locked(false).build();
         ReflectionTestUtils.setField(tdp1, "id", 100L);
         TripDayPlace tdp2 = TripDayPlace.builder().tripDay(day).place(placeB).visitOrder(2).locked(false).build();
         ReflectionTestUtils.setField(tdp2, "id", 200L);
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(java.util.Optional.of(day));
         given(tripDayPlaceRepository.findByTripDayIdOrderByVisitOrderAsc(10L)).willReturn(List.of(tdp1, tdp2));
 
@@ -133,14 +151,15 @@ class TripServiceTest {
 
     @Test
     void reorderPlaces_throwsInvalidReorderRequestException_whenIdSetMismatches() {
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
 
-        Place placeA = Place.builder().name("A").lat(1.0).lng(1.0).build();
+        Place placeA = Place.builder().userId(1L).name("A").lat(1.0).lng(1.0).build();
         TripDayPlace tdp1 = TripDayPlace.builder().tripDay(day).place(placeA).visitOrder(1).locked(false).build();
         ReflectionTestUtils.setField(tdp1, "id", 100L);
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(java.util.Optional.of(day));
         given(tripDayPlaceRepository.findByTripDayIdOrderByVisitOrderAsc(10L)).willReturn(List.of(tdp1));
 
@@ -152,10 +171,11 @@ class TripServiceTest {
 
     @Test
     void removePlaceFromDay_throwsTripDayPlaceNotFoundException_whenNotBelongingToDay() {
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = ownedTrip();
         TripDay day = TripDay.builder().trip(trip).dayNumber(1).build();
         ReflectionTestUtils.setField(day, "id", 10L);
 
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByIdAndTripId(10L, 1L)).willReturn(java.util.Optional.of(day));
         given(tripDayPlaceRepository.findByIdAndTripDayId(999L, 10L)).willReturn(java.util.Optional.empty());
 

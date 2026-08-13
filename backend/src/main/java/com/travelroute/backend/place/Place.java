@@ -23,7 +23,7 @@ public class Place {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @Column(nullable = false, length = 100)
@@ -51,8 +51,9 @@ public class Place {
     private LocalDateTime createdAt;
 
     @Builder
-    public Place(String name, String address, Double lat, Double lng,
+    public Place(Long userId, String name, String address, Double lat, Double lng,
                  String category, String memo, String kakaoPlaceId) {
+        this.userId = userId;
         this.name = name;
         this.address = address;
         this.lat = lat;

@@ -57,9 +57,20 @@ npm run dev
 
 ## API 키 관리 원칙
 
-- **Kakao REST API 키** (Local 검색, 도보 경로): 백엔드만 보유하고 프록시 형태로만 사용. 프론트에 절대 전달하지 않음.
+- **Kakao REST API 키** (Local 검색, 도보 경로, 로그인): 백엔드만 보유하고 프록시 형태로만 사용. 프론트에 절대 전달하지 않음.
 - **Kakao JavaScript 키** (Map SDK): 프론트 `.env.local`의 `VITE_KAKAO_JS_KEY`로 주입. 카카오 개발자 콘솔에서 사용 도메인을 등록해 도용을 방지.
 - 모든 키는 `.env` 계열 파일로만 관리하며 코드에 하드코딩하지 않는다.
+
+## Kakao 로그인 설정
+
+1. [Kakao Developers](https://developers.kakao.com) 콘솔에서 앱 생성 → REST API 키를 `KAKAO_REST_API_KEY`에 설정.
+2. 카카오 로그인 활성화 → Redirect URI에 `KAKAO_OAUTH_REDIRECT_URI` 값(기본
+   `http://localhost:8080/api/auth/kakao/callback`)을 정확히 동일하게 등록.
+3. `JWT_SECRET`은 HS256 서명에 쓰이므로 최소 32자 이상으로 설정 (`openssl rand -base64 32`).
+4. 로그인 성공 시 백엔드가 `FRONTEND_BASE_URL/auth/callback?token=...`로 리다이렉트하므로,
+   프론트를 다른 포트/도메인에서 띄운다면 이 값도 맞춰서 바꿔야 한다.
+5. `KAKAO_REST_API_KEY`가 비어 있어도 서버는 정상 기동하며, `/api/auth/**`를 제외한 모든 API는
+   JWT 인증이 필요하다 (Authorization: Bearer 헤더 없으면 401).
 
 ## 개발 로드맵
 

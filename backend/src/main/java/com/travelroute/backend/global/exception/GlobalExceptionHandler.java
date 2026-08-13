@@ -1,5 +1,6 @@
 package com.travelroute.backend.global.exception;
 
+import com.travelroute.backend.auth.KakaoOAuthException;
 import com.travelroute.backend.place.PlaceNotFoundException;
 import com.travelroute.backend.route.MissingRoutePlacesException;
 import com.travelroute.backend.trip.InvalidReorderRequestException;
@@ -40,6 +41,12 @@ public class GlobalExceptionHandler {
     })
     public ResponseEntity<ErrorResponse> handleBadRequestException(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(KakaoOAuthException.class)
+    public ResponseEntity<ErrorResponse> handleKakaoOAuthException(KakaoOAuthException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(e.getMessage()));
     }
 

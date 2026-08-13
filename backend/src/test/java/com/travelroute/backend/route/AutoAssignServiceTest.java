@@ -6,16 +6,15 @@ import static org.mockito.BDDMockito.given;
 
 import com.travelroute.backend.place.Place;
 import com.travelroute.backend.trip.Trip;
+import com.travelroute.backend.trip.TripAccessGuard;
 import com.travelroute.backend.trip.TripDay;
 import com.travelroute.backend.trip.TripDayPlace;
 import com.travelroute.backend.trip.TripDayPlaceRepository;
 import com.travelroute.backend.trip.TripDayRepository;
 import com.travelroute.backend.trip.TripNotFoundException;
-import com.travelroute.backend.trip.TripRepository;
 import com.travelroute.backend.trip.TripService;
 import com.travelroute.backend.trip.dto.TripDetailResponse;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,9 +27,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 class AutoAssignServiceTest {
 
     @Mock
-    private TripRepository tripRepository;
-
-    @Mock
     private TripDayRepository tripDayRepository;
 
     @Mock
@@ -38,6 +34,9 @@ class AutoAssignServiceTest {
 
     @Mock
     private TripService tripService;
+
+    @Mock
+    private TripAccessGuard tripAccessGuard;
 
     @Spy
     private GeoClusterer geoClusterer = new GeoClusterer();
@@ -68,7 +67,7 @@ class AutoAssignServiceTest {
 
     @Test
     void autoAssign_throwsTripNotFoundException_whenTripMissing() {
-        given(tripRepository.findById(1L)).willReturn(Optional.empty());
+        given(tripAccessGuard.requireOwnedTrip(1L)).willThrow(new TripNotFoundException(1L));
 
         assertThatThrownBy(() -> autoAssignService.autoAssign(1L))
                 .isInstanceOf(TripNotFoundException.class);
@@ -76,7 +75,7 @@ class AutoAssignServiceTest {
 
     @Test
     void autoAssign_keepsLockedPlaceOnItsOriginalDay_andDistributesUnlockedByGeography() {
-        Trip trip = Trip.builder().title("제주 3박4일").build();
+        Trip trip = Trip.builder().userId(1L).title("제주 3박4일").build();
         ReflectionTestUtils.setField(trip, "id", 1L);
 
         TripDay day1 = day(trip, 10L, 1);
@@ -102,7 +101,7 @@ class AutoAssignServiceTest {
         List<TripDayPlace> allEntries = List.of(
                 lockedOnDay1, unlockedSeoul1, unlockedBusan2, unlockedSeoul2, unlockedSeoul3, unlockedBusan3);
 
-        given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByTripIdOrderByDayNumberAsc(1L)).willReturn(List.of(day1, day2));
         given(tripDayPlaceRepository.findAllByTripIdOrderByDayAndOrder(1L)).willReturn(allEntries);
 
@@ -131,14 +130,14 @@ class AutoAssignServiceTest {
 
     @Test
     void autoAssign_returnsCurrentState_whenNothingIsUnlocked() {
-        Trip trip = Trip.builder().title("여행").build();
+        Trip trip = Trip.builder().userId(1L).title("여행").build();
         ReflectionTestUtils.setField(trip, "id", 1L);
         TripDay day1 = day(trip, 10L, 1);
 
         Place place = place(101L, 37.5, 127.0);
         TripDayPlace lockedOnly = tripDayPlace(1L, day1, place, 1, true);
 
-        given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
+        given(tripAccessGuard.requireOwnedTrip(1L)).willReturn(trip);
         given(tripDayRepository.findByTripIdOrderByDayNumberAsc(1L)).willReturn(List.of(day1));
         given(tripDayPlaceRepository.findAllByTripIdOrderByDayAndOrder(1L)).willReturn(List.of(lockedOnly));
 

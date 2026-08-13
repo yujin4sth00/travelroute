@@ -3,17 +3,18 @@ package com.travelroute.backend.place;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.travelroute.backend.auth.CurrentUserProvider;
 import com.travelroute.backend.place.dto.PlaceCreateRequest;
 import com.travelroute.backend.place.dto.PlaceResponse;
 import com.travelroute.backend.place.dto.PlaceSearchResult;
 import com.travelroute.backend.place.kakao.KakaoLocalClient;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +30,9 @@ class PlaceServiceTest {
 
     @Mock
     private KakaoLocalClient kakaoLocalClient;
+
+    @Mock
+    private CurrentUserProvider currentUserProvider;
 
     @InjectMocks
     private PlaceService placeService;
@@ -49,10 +53,13 @@ class PlaceServiceTest {
 
     @Test
     void save_persistsPlaceAndReturnsResponse() {
+        given(currentUserProvider.getUserId()).willReturn(1L);
+
         PlaceCreateRequest request = new PlaceCreateRequest(
                 "카페 A", "서울 강남구", 37.123, 127.456, "카페", "메모", "111");
 
         Place savedPlace = Place.builder()
+                .userId(1L)
                 .name(request.name())
                 .address(request.address())
                 .lat(request.lat())
@@ -76,20 +83,26 @@ class PlaceServiceTest {
 
     @Test
     void delete_removesPlace_whenExists() {
-        given(placeRepository.existsById(1L)).willReturn(true);
+        given(currentUserProvider.getUserId()).willReturn(1L);
+
+        Place place = Place.builder().userId(1L).name("카페 A").lat(37.123).lng(127.456).build();
+        ReflectionTestUtils.setField(place, "id", 1L);
+
+        given(placeRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(place));
 
         placeService.delete(1L);
 
-        verify(placeRepository).deleteById(1L);
+        verify(placeRepository).delete(place);
     }
 
     @Test
     void delete_throwsPlaceNotFoundException_whenNotExists() {
-        given(placeRepository.existsById(999L)).willReturn(false);
+        given(currentUserProvider.getUserId()).willReturn(1L);
+        given(placeRepository.findByIdAndUserId(999L, 1L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> placeService.delete(999L))
                 .isInstanceOf(PlaceNotFoundException.class);
 
-        verify(placeRepository, never()).deleteById(anyLong());
+        verify(placeRepository, never()).delete(any(Place.class));
     }
 }

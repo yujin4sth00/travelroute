@@ -12,6 +12,15 @@ kakao:
   rest-api-key: test-key
   local-api-base-url: https://dapi.kakao.com/v2/local
   walk-api-base-url: https://dapi.kakao.com/v2/routing/walk
+  oauth:
+    redirect-uri: http://localhost:8080/api/auth/kakao/callback
 
 cors:
   allowed-origins: http://localhost:5173
+
+app:
+  frontend-base-url: http://localhost:5173
+
+jwt:
+  secret: test-jwt-secret-key-for-unit-tests-only-32-bytes-min
+  expiration-seconds: 604800

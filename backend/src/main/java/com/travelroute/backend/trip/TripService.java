@@ -1,5 +1,6 @@
 package com.travelroute.backend.trip;
 
+import com.travelroute.backend.auth.CurrentUserProvider;
 import com.travelroute.backend.place.Place;
 import com.travelroute.backend.place.PlaceNotFoundException;
 import com.travelroute.backend.place.PlaceRepository;
@@ -29,6 +30,8 @@ public class TripService {
     private final TripDayRepository tripDayRepository;
     private final TripDayPlaceRepository tripDayPlaceRepository;
     private final PlaceRepository placeRepository;
+    private final TripAccessGuard tripAccessGuard;
+    private final CurrentUserProvider currentUserProvider;
 
     @Transactional
     public TripResponse createTrip(TripCreateRequest request) {
@@ -37,6 +40,7 @@ public class TripService {
         }
 
         Trip trip = Trip.builder()
+                .userId(currentUserProvider.getUserId())
                 .title(request.title())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
@@ -62,8 +66,7 @@ public class TripService {
 
     @Transactional(readOnly = true)
     public TripDetailResponse getTripDetail(Long tripId) {
-        Trip trip = tripRepository.findById(tripId)
-                .orElseThrow(() -> new TripNotFoundException(tripId));
+        Trip trip = tripAccessGuard.requireOwnedTrip(tripId);
 
         List<TripDay> days = tripDayRepository.findByTripIdOrderByDayNumberAsc(tripId);
         List<TripDayResponse> dayResponses = days.stream()
@@ -85,11 +88,11 @@ public class TripService {
         TripDay day = getOwnedTripDay(tripId, dayId);
 
         Place startPlace = request.startPlaceId() != null
-                ? placeRepository.findById(request.startPlaceId())
+                ? placeRepository.findByIdAndUserId(request.startPlaceId(), currentUserProvider.getUserId())
                         .orElseThrow(() -> new PlaceNotFoundException(request.startPlaceId()))
                 : null;
         Place endPlace = request.endPlaceId() != null
-                ? placeRepository.findById(request.endPlaceId())
+                ? placeRepository.findByIdAndUserId(request.endPlaceId(), currentUserProvider.getUserId())
                         .orElseThrow(() -> new PlaceNotFoundException(request.endPlaceId()))
                 : null;
 
@@ -106,7 +109,7 @@ public class TripService {
     @Transactional
     public TripDayPlaceResponse addPlaceToDay(Long tripId, Long dayId, TripDayPlaceCreateRequest request) {
         TripDay day = getOwnedTripDay(tripId, dayId);
-        Place place = placeRepository.findById(request.placeId())
+        Place place = placeRepository.findByIdAndUserId(request.placeId(), currentUserProvider.getUserId())
                 .orElseThrow(() -> new PlaceNotFoundException(request.placeId()));
 
         int nextOrder = tripDayPlaceRepository.findMaxVisitOrder(dayId) + 1;
@@ -156,6 +159,7 @@ public class TripService {
     }
 
     private TripDay getOwnedTripDay(Long tripId, Long dayId) {
+        tripAccessGuard.requireOwnedTrip(tripId);
         return tripDayRepository.findByIdAndTripId(dayId, tripId)
                 .orElseThrow(() -> new TripDayNotFoundException(tripId, dayId));
     }
