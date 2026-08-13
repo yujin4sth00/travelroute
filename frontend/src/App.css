@@ -125,6 +125,12 @@ button.danger {
   font-size: 13px;
 }
 
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
 /* Place list */
 
 .place-list {
@@ -164,6 +170,14 @@ button.danger {
 }
 
 /* Trip detail */
+
+.day-tabs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
 
 .day-tabs {
   display: flex;

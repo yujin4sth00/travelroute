@@ -1,5 +1,6 @@
 package com.travelroute.backend.trip;
 
+import com.travelroute.backend.route.AutoAssignService;
 import com.travelroute.backend.route.DayRouteService;
 import com.travelroute.backend.route.RouteOptimizationService;
 import com.travelroute.backend.route.dto.DayRouteResponse;
@@ -33,6 +34,7 @@ public class TripController {
     private final TripService tripService;
     private final RouteOptimizationService routeOptimizationService;
     private final DayRouteService dayRouteService;
+    private final AutoAssignService autoAssignService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -79,5 +81,10 @@ public class TripController {
     @GetMapping("/{tripId}/days/{dayId}/route")
     public DayRouteResponse getRoute(@PathVariable Long tripId, @PathVariable Long dayId) {
         return dayRouteService.getDayRoute(tripId, dayId);
+    }
+
+    @PostMapping("/{tripId}/auto-assign")
+    public TripDetailResponse autoAssign(@PathVariable Long tripId) {
+        return autoAssignService.autoAssign(tripId);
     }
 }

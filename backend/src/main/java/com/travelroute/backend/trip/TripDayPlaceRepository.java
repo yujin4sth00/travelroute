@@ -14,4 +14,8 @@ public interface TripDayPlaceRepository extends JpaRepository<TripDayPlace, Long
 
     @Query("SELECT COALESCE(MAX(tdp.visitOrder), 0) FROM TripDayPlace tdp WHERE tdp.tripDay.id = :tripDayId")
     Integer findMaxVisitOrder(@Param("tripDayId") Long tripDayId);
+
+    @Query("SELECT tdp FROM TripDayPlace tdp WHERE tdp.tripDay.trip.id = :tripId "
+            + "ORDER BY tdp.tripDay.dayNumber ASC, tdp.visitOrder ASC")
+    List<TripDayPlace> findAllByTripIdOrderByDayAndOrder(@Param("tripId") Long tripId);
 }

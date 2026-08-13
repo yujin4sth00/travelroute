@@ -61,4 +61,8 @@ public class TripDayPlace {
         this.visitOrder = visitOrder;
         this.locked = locked;
     }
+
+    public void reassignDay(TripDay tripDay) {
+        this.tripDay = tripDay;
+    }
 }

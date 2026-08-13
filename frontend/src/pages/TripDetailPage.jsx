@@ -8,6 +8,7 @@ import {
   reorderPlaces,
   optimizeDay,
   getDayRoute,
+  autoAssign,
 } from '../api/trips'
 import { listPlaces } from '../api/places'
 import DayPlaceList from '../components/DayPlaceList'
@@ -100,6 +101,12 @@ export default function TripDetailPage() {
       setRouteData(await getDayRoute(tripId, selectedDayId))
     })
 
+  const handleAutoAssign = () =>
+    withBusy(async () => {
+      await autoAssign(tripId)
+      await loadTrip()
+    })
+
   if (!trip) {
     return <div className="page">{error ? <p className="error-text">{error}</p> : '불러오는 중...'}</div>
   }
@@ -140,17 +147,25 @@ export default function TripDetailPage() {
         </p>
       </div>
 
-      <div className="day-tabs">
-        {trip.days.map((day) => (
-          <button
-            key={day.id}
-            className={day.id === selectedDayId ? 'day-tab active' : 'day-tab'}
-            onClick={() => setSelectedDayId(day.id)}
-          >
-            Day {day.dayNumber}
-          </button>
-        ))}
+      <div className="day-tabs-row">
+        <div className="day-tabs">
+          {trip.days.map((day) => (
+            <button
+              key={day.id}
+              className={day.id === selectedDayId ? 'day-tab active' : 'day-tab'}
+              onClick={() => setSelectedDayId(day.id)}
+            >
+              Day {day.dayNumber}
+            </button>
+          ))}
+        </div>
+        <button className="secondary" onClick={handleAutoAssign} disabled={busy}>
+          자동 분배
+        </button>
       </div>
+      <p className="muted">
+        여행에 배치된 잠기지 않은 장소 전체를 날짜별로 지리적으로 묶어 재배치합니다.
+      </p>
 
       {error && <p className="error-text">{error}</p>}
 

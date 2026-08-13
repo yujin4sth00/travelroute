@@ -20,3 +20,5 @@ export const optimizeDay = (tripId, dayId) =>
   api.post(`/api/trips/${tripId}/days/${dayId}/optimize`)
 
 export const getDayRoute = (tripId, dayId) => api.get(`/api/trips/${tripId}/days/${dayId}/route`)
+
+export const autoAssign = (tripId) => api.post(`/api/trips/${tripId}/auto-assign`)
