@@ -1,6 +1,11 @@
 package com.travelroute.backend.global.exception;
 
 import com.travelroute.backend.place.PlaceNotFoundException;
+import com.travelroute.backend.trip.InvalidReorderRequestException;
+import com.travelroute.backend.trip.InvalidTripPeriodException;
+import com.travelroute.backend.trip.TripDayNotFoundException;
+import com.travelroute.backend.trip.TripDayPlaceNotFoundException;
+import com.travelroute.backend.trip.TripNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,9 +21,23 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getMessage()));
     }
 
-    @ExceptionHandler(PlaceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handlePlaceNotFoundException(PlaceNotFoundException e) {
+    @ExceptionHandler({
+            PlaceNotFoundException.class,
+            TripNotFoundException.class,
+            TripDayNotFoundException.class,
+            TripDayPlaceNotFoundException.class
+    })
+    public ResponseEntity<ErrorResponse> handleNotFoundException(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler({
+            InvalidTripPeriodException.class,
+            InvalidReorderRequestException.class
+    })
+    public ResponseEntity<ErrorResponse> handleBadRequestException(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(e.getMessage()));
     }
 
